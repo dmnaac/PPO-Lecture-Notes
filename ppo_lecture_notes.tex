@@ -1,0 +1,1116 @@
+% !TEX program = xelatex
+\documentclass[UTF8,12pt,a4paper]{ctexrep}
+
+% ===================== 宏包 =====================
+\usepackage[a4paper,margin=2.5cm,headheight=15pt]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[table]{xcolor}
+\usepackage[skins,breakable]{tcolorbox}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=linkblue,citecolor=linkblue,urlcolor=linkblue,bookmarksnumbered=true]{hyperref}
+
+% ===================== 主题色 =====================
+\definecolor{main}{RGB}{0,84,147}       % 主色：深蓝
+\definecolor{infob}{RGB}{23,119,190}    % 大白话
+\definecolor{infor}{RGB}{192,57,43}     % 钉子
+\definecolor{infog}{RGB}{46,139,87}     % 自检
+\definecolor{linkblue}{RGB}{0,84,147}   % 链接
+\definecolor{lightgray}{RGB}{243,245,248}
+
+% ===================== 版面 =====================
+\linespread{1.25}
+
+% 列表统一间距
+\setlist{
+  itemsep=2pt, parsep=0pt, topsep=4pt, partopsep=0pt,
+  leftmargin=1.6em
+}
+
+% 表格统一外观
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{6pt}
+\arrayrulecolor{gray!60}
+
+% 关键公式浅灰底色
+\setlength{\fboxsep}{7pt}
+\renewcommand{\boxed}[1]{{\colorbox{lightgray}{$\displaystyle #1$}}}
+
+% ===================== 标题样式 =====================
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\color{main}}
+  {\Large 第 \thechapter 章}
+  {8pt}
+  {\Huge}
+  [\vspace{2pt}{\color{main}\titlerule[1.5pt]}]
+\titlespacing*{\chapter}{0pt}{-10pt}{26pt}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{main}}
+  {\thesection}{0.7em}{}
+\titlespacing*{\section}{0pt}{3.2ex plus 1ex minus .2ex}{1.8ex plus .2ex}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{main!85!black}}
+  {\thesubsection}{0.7em}{}
+\titlespacing*{\subsection}{0pt}{2.6ex plus 1ex minus .2ex}{1.4ex plus .2ex}
+
+% 页眉章名格式
+\renewcommand{\chaptermark}[1]{\markboth{第 \thechapter 章\quad #1}{}}
+
+% ===================== 页眉页脚 =====================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{main!80!black}PPO 算法学习讲义}
+\fancyhead[R]{\small\color{main!80!black}\nouppercase{\leftmark}}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\small\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+}
+
+% ===================== 封面 =====================
+\makeatletter
+\renewcommand{\maketitle}{%
+  \begin{titlepage}
+    \centering
+    \vspace*{1.5cm}
+    {\color{main}\rule{\textwidth}{2.5pt}}\\[1.0cm]
+    {\Huge\bfseries\color{main}\@title\par}
+    \vspace{0.35cm}
+    {\color{main}\rule{\textwidth}{0.8pt}}\\[1.4cm]
+    {\Large\@author\par}
+    \vspace{0.6cm}
+    {\large\@date\par}
+    \vfill
+    {\color{main}\rule{\textwidth}{0.8pt}}
+    \vspace{0.5cm}
+  \end{titlepage}
+}
+\makeatother
+
+% ===================== 讲义标记框 =====================
+% 大白话 / 钉子 / 自检
+\tcbset{
+  callout/.style={
+    breakable, boxrule=0pt, arc=2pt,
+    left=8pt, right=8pt, top=6pt, bottom=7pt,
+    fonttitle=\bfseries\small, coltitle=white,
+    attach title to upper={\par\vspace{3pt}},
+    before skip=10pt, after skip=8pt,
+  }
+}
+\newtcolorbox{plainbox}{callout,
+  colback=infob!4, colframe=infob!4,
+  borderline west={2.5pt}{0pt}{infob!75!black},
+  colbacktitle=infob!75!black, title={\textcolor{black}{【大白话】}}}
+\newtcolorbox{pinbox}{callout,
+  colback=infor!4, colframe=infor!4,
+  borderline west={2.5pt}{0pt}{infor!75!black},
+  colbacktitle=infor!75!black, title={\textcolor{black}{【钉子】}}}
+\newtcolorbox{checkb}{callout,
+  colback=infog!4, colframe=infog!4,
+  borderline west={2.5pt}{0pt}{infog!75!black},
+  colbacktitle=infog!75!black, title={\textcolor{black}{【自检】}}}
+
+\newcommand{\plain}[1]{\begin{plainbox}#1\end{plainbox}}
+\newcommand{\pin}[1]{\begin{pinbox}#1\end{pinbox}}
+\newcommand{\selfcheck}[1]{\begin{checkb}#1\end{checkb}}
+
+% 流程链条提示条
+\newcommand{\flow}[1]{\par\medskip\noindent
+  \begin{tcolorbox}[colback=main!6,colframe=main!6,boxrule=0pt,arc=2pt,
+    left=8pt,right=8pt,top=5pt,bottom=5pt,halign=center,
+    before skip=8pt,after skip=8pt]
+    \color{main!85!black}\bfseries #1
+  \end{tcolorbox}\par\medskip}
+
+\title{\textbf{PPO 算法学习笔记}\\[6pt]
+\large 直觉解释、公式推导与训练实践}
+\author{那東明}
+\date{2026年11月20日}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+% ============================================================
+\chapter*{前言：如何使用本讲义}
+\addcontentsline{toc}{chapter}{前言：如何使用本讲义}
+% ============================================================
+
+本讲义按\textbf{三遍学习法}组织，目标是先建立直觉，再补齐推导，最后能用于实现和调参：
+
+\begin{enumerate}[nosep]
+  \item \textbf{第一遍（第一章）}：用``训狗''类比讲清 PPO 在做什么、为什么这样做，暂不展开公式。
+  \item \textbf{第二遍（第二章）}：补齐公式推导，每个关键步骤都配【大白话】对照，便于回到直觉。
+  \item \textbf{第三遍（按需）}：对着实现代码逐行核对，进行调参实践，或针对具体环节继续深入。
+\end{enumerate}
+
+复习时可先读各站【钉子】和小结；系统学习时按顺序阅读，自检题先作答再看参考答案。
+
+\textbf{标记约定}：
+
+\begin{itemize}[nosep]
+  \item {\color{blue!70!black}\textbf{【大白话】}}：公式或概念的直觉解释，可脱离数学单独阅读；
+  \item {\color{red!60!black}\textbf{【钉子】}}：需要记住的核心结论；
+  \item {\color{green!50!black}\textbf{【自检】}}：随堂练习，附参考答案。
+\end{itemize}
+
+% ============================================================
+\chapter{大白话走全程（第一遍）}
+% ============================================================
+
+\section{引言：贯穿全课的类比与算法地位}
+
+把``AI 学会做决策''想象成\textbf{训狗}：
+
+\begin{itemize}[nosep]
+  \item 狗 $=$ 要训练的 AI（四足机器人 / 大模型）；
+  \item 动作指令 $=$ \textbf{策略}（policy），即``遇到情况倾向于怎么做''的习惯；
+  \item 训练场里跑一圈 $=$ 采样（rollout）；
+  \item 零食 $=$ \textbf{奖励}（reward）。
+\end{itemize}
+
+PPO 干的事概括成一个循环：
+
+\flow{\emph{让它跑 $\to$ 记下表现 $\to$ 调一点点习惯 $\to$ 再让它跑 $\to \cdots$}}
+
+PPO（Proximal Policy Optimization，近端策略优化）由 OpenAI 的 Schulman 等人于 2017 年提出（arXiv:1707.06347）。它实现相对简单、训练较稳定，被广泛用于 ChatGPT 的 RLHF 和四足机器人步态训练等任务。
+
+% ------------------------------------------------------------
+\section{第 1 站：PPO 是干嘛的}
+
+PPO 是一种``靠试错和奖励来调教 AI''的训练方法：AI 在环境里折腾，做对了给零食、做错了没有，PPO 根据这些经验\textbf{一点点调整行为习惯}，让它越来越会做事。
+
+它属于``策略梯度''一派，特点很直接：不逐步评估走得好不好，只看最终结果，回头微调``遇到情况时倾向于怎么做''这个习惯本身。
+
+\plain{为什么每次只调``一点点''？经验记录来自\textbf{旧习惯}。若新习惯改得面目全非，旧成绩单上的结论可能已经失效，训练也无法据此判断新习惯好坏。大幅更新还可能导致表现骤降；随后的数据由变差的策略产生，更新继续偏离，难以恢复。}
+
+\pin{\textbf{小步慢改，错了能救；大步猛改，一崩到底。}}
+
+\selfcheck{问题：为什么``调一点点''而不是一步改到位？
+
+\noindent【参考答案】：记录是旧习惯下的，改太猛旧数据彻底失灵，表现崩了数据更烂，救不回来；小步慢改错了还能纠正。}
+
+% ------------------------------------------------------------
+\section{第 2 站：为什么``改太猛''会崩}
+
+\plain{训狗的例子：狗现在的习惯是``见人就扑''。小步改法是这周只教``先坐下再摇尾巴''，狗基本听得懂，效果也能观察到。大步改法是一口气推翻全部行为、立十几条新规，狗可能当场懵圈；此时手里只有``扑人时期''的观察记录，无法判断新规矩执行得如何。}
+
+PPO 训练里``崩''的样子：某一步更新迈太大，策略突然变得稀奇古怪，动作随机乱抽；而且越崩数据越烂，基本没有回头路。
+
+所有这类算法（TRPO、PPO）遵守同一条铁律：
+
+\pin{\textbf{每次更新，只允许新策略比旧策略``迈开一小步''。}}
+
+\textbf{为什么崩了难救回来？}表现变差后，新采到的数据也会变差；用这些数据继续更新，策略可能进一步偏离，形成表现与数据相互恶化的循环。
+
+\selfcheck{问题：``崩了''之后为什么很难救回来？
+	
+\noindent【参考答案】：数据也跟着坏了，而且越练越坏——表现与数据互相拖下水。}
+
+% ------------------------------------------------------------
+\section{第 3 站：拿旧记录评价新策略（权重换算）}
+
+\textbf{核心矛盾}：训练素材是\textbf{旧习惯}时期的记录（什么场景、做了什么、得多少零食），现在要评估的是\textbf{新习惯}好不好。直接拿旧记录算平均成绩是错的——好比老板改了门店话术，却拿着老话术时代的客户反馈给新话术打总分。
+
+\textbf{PPO 的解法：给每条旧记录``换算权重''。}
+
+\begin{itemize}[nosep]
+  \item 新习惯比旧习惯\textbf{更爱}做这个动作 $\to$ 这条记录\textbf{加权重}（更有代表性）；
+  \item 新习惯\textbf{更不爱}做 $\to$ \textbf{降权重}；
+  \item 新旧几乎一样爱做 $\to$ 权重\textbf{不变（$=$ 1）}。
+\end{itemize}
+
+\textbf{权重的来历}：权重 $=$ 新旧习惯在\textbf{同一个场合选同一个动作的偏爱程度之比}（学名叫\textbf{重要性采样}的``重要性''）。例：某姿势下旧大脑摆腿概率 $0.5$，新大脑 $0.25$，权重 $= 0.5$，这条记录代表性对折；若旧 $0.02$、新 $0.4$，权重 $= 20$。
+
+\plain{类比：民意调查加权。在写字楼门口调查``通勤时间''，样本里上班族偏多，直接平均会高估。解决办法不是重抽样本，而是给上班族样本降权、按真实人口比例还原。PPO 一模一样：旧数据天然偏向旧习惯，权重换算就是把它还原成新习惯的视角。}
+
+当新旧策略仍较接近时，这种加权可以近似还原新策略下的期望，因此\textbf{同一批数据可以反复用于多轮更新}，无需每次更新都重新采样。这是 PPO 提高样本效率的原因之一。
+
+\textbf{深挖：雷埋在哪？}权重是比值，比值会跑飞：
+
+\begin{enumerate}[nosep]
+  \item \textbf{一票独大}：权重 $20$ 意味着一条轨迹主宰整批评分；
+  \item \textbf{证据不可靠}：$0.02$ 的罕见动作样本里可能就一两条，噪声极大——最不可靠的证据说了最响的话；
+  \item \textbf{牵引越界}：把更新一步拽出信任圈，崩回第 2 站的断崖剧本。
+\end{enumerate}
+
+第 4 站的裁剪正是用来限制这类极端权重的影响。
+
+% ------------------------------------------------------------
+\section{第 4 站：裁剪（Clipping）}
+
+站 3 的``换算权重''有个漏洞：权重是比值，新习惯若比旧习惯爱做某动作 $10$ 倍、$20$ 倍，权重就 $10$、$20$；反向有 $0.01$。拿着这样的权重猛算，``预期成绩''会虚高——\textbf{被自己手里的旧数据牵着鼻子走}，往夸大的方向猛调。这就是第 2 站``改太猛会崩''换了个马甲又回来。
+
+\textbf{裁剪的做法：给权重掐头去尾}。设上下限（如 $0.8$ 到 $1.2$）：
+
+\begin{itemize}[nosep]
+  \item 权重算出 $1.1$，在区间里 $\to$ 该是多少就是多少，正常用；
+  \item 权重算出 $3.0$，超上限 $\to$ 一律当 $1.2$ 算，不许再给额外好处；
+  \item 权重算出 $0.2$，破下限 $\to$ 一律当 $0.8$ 算，不许再狠踩一脚。
+\end{itemize}
+
+\plain{类比：油门限位器。可以踩油门（往好的方向调），但踩到底也就那么快——这一脚下去，无论旧记录看起来多``值得猛冲''，最多只能让策略迈这么大的步子。}
+
+这就是 PPO 名字里 ``Proximal''（近端、贴近）的含义：裁剪逼着新策略\textbf{贴着}旧策略走。核心公式（第一遍只看形状，逐项对号入座，不推导）：
+
+$$
+L^{\mathrm{CLIP}} = \mathbb{E}\left[\min\left(r \cdot A,\ \mathrm{clip}(r,\, 1-\epsilon,\, 1+\epsilon) \cdot A\right)\right]
+$$
+
+\begin{itemize}[nosep]
+  \item $r$：那笔``权重''（新旧策略概率之比）；
+  \item $A$：``这个动作好还是坏''（优势，好为正、坏为负）；
+  \item $\mathrm{clip}$：掐头去尾；
+  \item $\min$：\textbf{两头都别贪}——好处封顶、坏处照收。
+\end{itemize}
+
+\textbf{裁剪与站 3 的关系}：权重换算可以复用旧数据，但比值可能过大或过小；裁剪通过限制比值范围，减小极端样本对更新的影响。
+
+\selfcheck{问题：裁剪掐的是``权重''，真正防住的是什么？
+
+【参考答案】：防止被夸大的权重带节奏、往一个方向猛调（改太猛），一步跨出信任圈导致崩盘。}
+
+% ------------------------------------------------------------
+\section{第 5 站：一整圈训练长什么样}
+
+前面四站是零件，这站看整机。PPO 一轮完整训练：
+
+\begin{enumerate}[nosep]
+  \item \textbf{跑}：当前策略（旧习惯）跑上一大圈，把``场景 $\to$ 动作 $\to$ 零食''全记下来，攒一份体验记录；
+  \item \textbf{打分}：给记录里每个动作打``好/坏''标签——这动作比平均预期好多少（优势 $A$）。打分用 \textbf{GAE}（见下方深挖）；
+  \item \textbf{学}：拿这份记录优化裁剪目标。\textbf{同一批记录反复学好几轮}（通常 $3\sim10$ 轮），每轮切成小份小份更新（小批梯度更新）——``抄写 N 遍''靠站 3 的权重换算成立，靠站 4 的裁剪保证不抄歪；
+  \item \textbf{换代}：学完，新习惯转正变旧习惯，回到第 1 步。
+\end{enumerate}
+
+外面再套一层大循环：1$\sim$4 反复转几十上百次。
+
+\pin{\textbf{口诀：跑一圈 $\to$ 打分 $\to$ 抄写 N 遍 $\to$ 换代 $\to$ 再跑。}}
+\vspace{3mm}
+\noindent\textbf{深挖：GAE 怎么打分（分账问题）}
+
+一轮跑完拿到的是``每步零食 $+$ 最后总表现''，要调的是\textbf{每个瞬间的动作}——一块蛋糕（总奖励）要切给一长串动作。工具：价值网络 $V(s)$（``从当前状态往后大概还能拿多少零食''的预感）。
+
+两种切法各有毛病：
+
+\begin{itemize}[nosep]
+  \item \textbf{只看一步（看``惊喜''）}：当下零食 $+$ 新预感 $-$ 旧预感。稳、不嘈杂，但\textbf{短视}——大步摆腿的好处 5 步后才显现，根本看不见，好动作被冤枉打低分；
+  \item \textbf{看到底（算总账）}：把之后所有折扣零食都算这个动作头上。不短视，但\textbf{嘈杂}——后面的运气、别的动作的功劳全赖它头上，评分忽高忽低。
+\end{itemize}
+
+\textbf{GAE 的答案}：两种切法按比例混用，比例由滑杆 $\lambda$ 控制：
+
+\begin{itemize}[nosep]
+  \item $\lambda = 0$：纯``看一步''——稳但短视；
+  \item $\lambda = 1$：纯``看到底''——远视但噪；
+  \item $\lambda = 0.9\sim0.95$：大部分看长期、把噪声往下压——四足训练几乎清一色 $0.95$。
+\end{itemize}
+
+每个动作最后得到一个数 $A$：\textbf{正 $=$ 比预期好（以后多做），负 $=$ 比预期差（少做）}。``比预期''三个字关键：减掉预感 $V(s)$，就是不把``状态本来就好''的运气算到动作头上，只奖真本事。
+
+\selfcheck{问题：某动作的好处 5 步后才显现，$\lambda=0$ 和 $\lambda=1$ 各出什么毛病？
+
+【参考答案】：$\lambda=0$ 短视，好处看不见，被冤枉打低分；$\lambda=1$ 连坐，后面一切全算它头上，评分全是噪声。}
+
+% ------------------------------------------------------------
+\section{第 6 站：实际跑起来注意啥}
+
+\begin{enumerate}[nosep]
+  \item \textbf{奖励设计决定上限（最重要）}。PPO 只管``照着奖励调习惯''，不判断奖励本身对不对。扑人也给零食，学出来的就是扑人。四足训练里，速度、姿态、能耗的奖励配比，比算法本身更能决定效果。\textbf{先让奖励说人话，再谈调参}。
+  \item \textbf{认得两种``出事''信号}：
+  \begin{itemize}[nosep]
+    \item \textbf{断崖}：奖励曲线好好的突然跳水——这步改太猛崩了。对策：调小步长、调紧裁剪；
+    \item \textbf{摆烂}（过早收敛）：发现``永远做同一个动作最保险''，动作千篇一律，探索没了。对策：鼓励多尝试（留一点随机性）；第一优先还是查\textbf{奖励配比}。
+  \end{itemize}
+  \item \textbf{调参手感，先记三个词}：裁剪松紧（太紧学不动，太松会崩，起步用默认值）；步子大小（学习率，宁小勿大，稳比快值钱）；一份数据学几遍（别贪多，遍数越多离``数据失灵''越近）。
+\end{enumerate}
+
+\pin{\textbf{总纲：训练异常时，应优先检查奖励设计和更新幅度，再检查 PPO 的其他实现细节。}}
+
+\selfcheck{问题：机器人开始``宁愿小碎步蹭着走也不敢大步迈''，先动哪里？
+	
+【参考答案】：调整奖励配比，增大速度奖励——当前打分体系里大步的收益抵不过摔倒风险，它没动力冒险。}
+
+% ------------------------------------------------------------
+\section{案例串讲：四足机器人平地行走}
+
+\textbf{场景}：四足机器人 $=$ 狗。大脑是一张神经网络（策略）：读进 IMU 和关节传感器，输出每条腿每个电机该出多大力。训练场是平地。每走一步发一次分：往前走得快加分、摔倒扣大分、姿态端正加分、耗电少加分——合起来是奖励。
+
+\begin{itemize}[nosep]
+  \item \textbf{第 1 站}：PPO 干的事就是——让它跑一段、记下轨迹、照奖励微调大脑、再跑。平地步态就是一圈圈``跑—记—调''磨出来的，一转几百个回合。``一点点调''：大脑参数猛改一步，电机出力方式面目全非，当场不知道腿该怎么迈。
+  \item \textbf{第 2 站}：某次调太狠，下一轮一迈腿就内八乱抖，直接趴窝。手上所有轨迹都是旧步态下跑的，没法告诉新步态为什么抽风，只会喂出更烂的更新，越练越歪。
+  \item \textbf{第 3 站}：旧轨迹不能扔。用旧步态轨迹评估新步态，按``新步态多大程度还会这么做''重新配权重：更常在某姿势下这么迈腿就加权，不常就降权。旧数据由此继续给新大脑打分。
+  \item \textbf{第 4 站}：权重是比值会跑飞——某条轨迹权重算出大数字，更新被带节奏冲过头，回到断崖。裁剪 $=$ 油门限位器：权重掐死在上下限内，好处封顶、坏处照收，逼大脑每次只挪一小步。
+  \item \textbf{第 5 站}：真实训练（Isaac Lab 里看到的）$=$ 机器人跑 N 秒攒轨迹 $\to$ GAE 给每个动作打``对走得快且稳贡献多少''的分 $\to$ 同一批轨迹切小份训 $3\sim10$ 轮（权重换算 $+$ 裁剪保平安）$\to$ 新大脑转正 $\to$ 再跑。
+  \item \textbf{第 6 站}：盯两件事——奖励曲线突然跳水 $=$ 上一步改太猛，调小步长、收紧裁剪；动作多样性丧失 $=$ 奖励里``往前走''的分没给够，开摆了。$90\%$ 的调参精力花在\textbf{奖励配比}上：速度、姿态、能耗、摔倒惩罚怎么权衡，决定走出漂亮步态还是僵尸步。
+\end{itemize}
+
+\pin{\textbf{主线一句话}：四足机器人用旧步态的轨迹 $+$ 权重换算来评价新步态，用裁剪保证每次只挪一小步，一份轨迹反复训几轮再换代——就靠这个死循环，把随机抖动磨成稳定步态。}
+
+% ------------------------------------------------------------
+\section{第一遍小结：主线与三根顶梁柱}
+
+\textbf{主线}：
+\flow{\emph{让它跑 $\to$ 给经历打分 $\to$ 用``权重换算''让旧记录服务新策略 $\to$ 用``裁剪''防止改太猛 $\to$ 同一份数据学几遍 $\to$ 换代重来 $\to$ 转到学会为止。}}
+
+\textbf{三根顶梁柱}：
+\begin{center}
+\rowcolors{2}{lightgray}{white}
+\begin{tabular}{ll}
+\toprule
+\textbf{权重换算}（重要性采样）& 管``旧数据还能用''\\
+\textbf{裁剪}（Clipping）& 管``更新不越界''\\
+\textbf{打分}（GAE 优势估计）& 管``功劳分得清''\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+% ------------------------------------------------------------
+\section{大白话概念速查表}
+
+\begin{center}
+\small
+\rowcolors{2}{lightgray}{white}
+\begin{tabular}{p{3.2cm}p{9.5cm}}
+\toprule
+\textbf{大白话说法} & \textbf{一句话含义}\\
+\midrule
+策略 / 大脑 & 遇到情况倾向于怎么做的习惯（神经网络）\\
+旧策略 / 新策略 & 更新前 / 更新后的策略（$\pi_{\theta_{\mathrm{old}}}$ / $\pi_\theta$）\\
+权重 & 新旧策略对同一``状态$+$动作''的偏爱之比 $r$\\
+权重换算 & 重要性采样：让旧记录按新视角重新配权\\
+裁剪 & 把权重掐头去尾，封死更新步长\\
+信任域 & ``不许跑太远''的一小步范围\\
+打分 / 优势 $A$ & 这个动作比``状态平均预期''好多少（去运气）\\
+断崖 & 更新太猛，表现跳水、数据变烂\\
+摆烂 & 学会``做同一个动作最保险''，探索消失\\
+样本效率 & 一份数据能反复学几遍\\
+GAE & 打分方法：在``看得远''与``算得稳''间拉滑杆 $\lambda$\\
+$\lambda$ & GAE 滑杆：$0=$ 只看一步，$1=$ 看到底，常用 $0.9\sim0.95$\\
+Proximal（近端）& 裁剪逼着新策略贴着旧策略走\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ============================================================
+\chapter{公式推导（第二遍）}
+% ============================================================
+
+\section{本章导读：一条问题链}
+
+第二章按问题展开的先后顺序组织，各模块的承接关系如下：
+
+\begin{center}
+\small
+\rowcolors{2}{lightgray}{white}
+\begin{tabular}{c|p{4.6cm}|p{4.8cm}}
+\toprule
+\textbf{模块} & \textbf{回答的问题} & \textbf{承上启下}\\
+\midrule
+M1 & 梯度到底在调什么？ & 全书地基：$\log$ 概率 $\times$ 优势\\
+M2 & 旧数据凭什么能用？ & 拆掉 M1 的期望炸弹，但只在锚点附近有效\\
+M3 & 为什么必须``限步''？ & 用下界定量``多近才算近''，暴露信任域成本\\
+M4 & 限步怎么一阶实现？ & 兑现 M3 的承诺：$\min$ 悲观下界替代 KL\\
+M5 & 每个动作怎么打分？ & 给 M4 的 $\hat{A}$ 一个可实现的递推式\\
+M6 & 整机怎么跑起来？ & 拼装全部零件，落成损失函数与训练流程\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\flow{\emph{M1 调什么 $\to$ M2 旧数据怎么用 $\to$ M3 为什么限步 $\to$ M4 怎么限步 $\to$ M5 每步怎么打分 $\to$ M6 整机怎么跑}}
+
+记号全局统一，见 \ref{sec:notation} 节。
+
+% ------------------------------------------------------------
+\section{记号约定（全局）}
+\label{sec:notation}
+
+\begin{center}
+\small
+\rowcolors{2}{lightgray}{white}
+\begin{tabular}{ll}
+\toprule
+$\pi_\theta(a|s)$ & 参数为 $\theta$ 的策略：状态 $s$ 下选动作 $a$ 的概率\\
+$\theta_{\mathrm{old}}$ & 采样数据时的旧策略参数\\
+$\tau$ & 一条轨迹 $(s_0,a_0,s_1,a_1,\ldots,s_T)$\\
+$p_\theta(\tau)$ & 轨迹 $\tau$ 出现的概率分布\\
+$R(\tau)$ & 轨迹总回报（远者打折）\\
+$\gamma \in (0,1]$ & 折扣因子\\
+$J(\theta)$ & 目标函数：平均总回报\\
+$\eta(\pi)$ & 策略 $\pi$ 的期望折扣回报（M3 起使用）\\
+$\rho_\pi(s)$ & 折扣状态访问分布（M3 起使用）\\
+$V^{\pi}(s)$ & 价值函数：从状态 $s$ 出发的期望回报\\
+$Q^{\pi}(s,a)$ & 动作价值：从 $s$ 做 $a$ 出发的期望回报\\
+$A^{\pi}(s,a)$ & 优势：$Q^{\pi}(s,a)-V^{\pi}(s)$，``比预期好多少''\\
+$r_t(\theta)$ & 概率比 $\dfrac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\mathrm{old}}}(a_t|s_t)}$（权重）\\
+$\epsilon$ & 裁剪区间 $[1-\epsilon,\,1+\epsilon]$ 的半宽\\
+$\lambda$ & GAE 滑杆\\
+$\delta_t$ & TD 误差（M5）\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ------------------------------------------------------------
+\section{M1：策略梯度定理的完整推导}
+
+\textbf{锚点}：对应第 1 站——PPO 属于策略梯度一派，直接调``习惯''本身。
+
+\subsection*{Step 0 \; 基础记号}
+
+策略 $\pi_\theta(a|s)$（神经网络）；环境：状态转移 $P(s'|s,a)$、奖励 $r(s,a)$；轨迹 $\tau = (s_0,a_0,s_1,a_1,\ldots,s_T)$。
+
+轨迹回报（一整场零食总和，远的打折）：
+
+$$
+R(\tau) = \sum_{t=0}^{T} \gamma^t\, r(s_t, a_t)
+$$
+
+目标函数（要最大化的东西）：
+
+$$
+J(\theta) = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[R(\tau)\right]
+$$
+
+注意期望底下 $\tau \sim p_\theta$：\textbf{期望是对新策略取的}——这是站 3 那颗定时炸弹的出处。
+
+\subsection*{Step 1 \; 轨迹分布的显式展开}
+
+$$
+p_\theta(\tau) = \rho_0(s_0) \prod_{t=0}^{T} \pi_\theta(a_t|s_t)\, P(s_{t+1}|s_t, a_t)
+$$
+
+其中 $\rho_0$ 是初始状态分布。\textbf{整条式子里只有 $\pi_\theta$ 带 $\theta$}——这是后面一切简化的伏笔。
+
+\subsection*{Step 2 \; 对数求导技巧（唯一的数学工具）}
+
+$$
+\nabla_\theta \log x = \frac{\nabla_\theta x}{x}
+\quad\Longleftrightarrow\quad
+\nabla_\theta x = x\,\nabla_\theta \log x
+$$
+
+用途：把``对概率的梯度''改写成``概率 $\times$ 对数概率的梯度''，从而把梯度\textbf{挪进期望里}。
+
+\subsection*{Step 3 \; 梯度挪进期望}
+
+$$
+\nabla_\theta J(\theta) = \int \nabla_\theta p_\theta(\tau)\, R(\tau)\, d\tau
+= \int p_\theta(\tau)\, \nabla_\theta \log p_\theta(\tau)\, R(\tau)\, d\tau
+$$
+
+第二步用了 Step 2，于是
+
+$$
+\boxed{\;\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[\nabla_\theta \log p_\theta(\tau)\, R(\tau)\right]\;}
+$$
+
+这是 REINFORCE 的雏形：采样一条轨迹，乘总回报，对 $\log$ 轨迹概率求梯度。但 $\log p_\theta(\tau)$ 还没法算，继续拆。
+
+\subsection*{Step 4 \; 拆开 $\log p_\theta(\tau)$，环境项消失}
+
+对 Step 1 两边取 $\log$（连乘变连加）：
+
+$$
+\log p_\theta(\tau) = \log \rho_0(s_0) + \sum_{t=0}^{T}\Big[\log \pi_\theta(a_t|s_t) + \log P(s_{t+1}|s_t,a_t)\Big]
+$$
+
+对 $\theta$ 求梯度：$\rho_0$ 和 $P$ 都不含 $\theta$，梯度为零，全式只剩
+
+$$
+\nabla_\theta \log p_\theta(\tau) = \sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t|s_t)
+$$
+
+\plain{环境项不含 $\theta$，因此求策略梯度时不需要环境模型，这属于无模型强化学习。代回 Step 3：
+
+$$
+\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim p_\theta}\left[\left(\sum_{t} \nabla_\theta \log \pi_\theta(a_t|s_t)\right) R(\tau)\right]
+$$}
+
+\subsection*{Step 5 \; 因果性裁剪：过去不欠未来的账}
+
+关键观察：$\nabla_\theta \log \pi_\theta(a_t|s_t)$ 只涉及 $t$ 时刻的 $(s_t,a_t)$；而 $t' < t$ 的奖励 $r_{t'}$ 发生在 $a_t$ 之前，与 $a_t$ 无关，对无关项取期望严格为零。所以每项动作的梯度只需乘\textbf{它之后的奖励}（reward-to-go）：
+
+$$
+\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim p_\theta}\left[\sum_{t} \nabla_\theta \log \pi_\theta(a_t|s_t)\, G_t\right],
+\qquad
+G_t = \sum_{t'=t}^{T} \gamma^{t'-t}\, r_{t'}
+$$
+
+这一步砍掉大量无关噪声项，方差已经降了一截，但还不够。
+
+\subsection*{Step 6 \; 减基线：免费降噪}
+
+对任意只依赖 $s$ 的函数 $b(s_t)$（不依赖 $a$）：
+
+$$
+\mathbb{E}_{a_t \sim \pi_\theta}\left[\nabla_\theta \log \pi_\theta(a_t|s_t)\, b(s_t)\right]
+= b(s_t) \sum_{a_t} \pi_\theta(a_t|s_t)\, \frac{\nabla_\theta \pi_\theta(a_t|s_t)}{\pi_\theta(a_t|s_t)}
+= b(s_t)\, \nabla_\theta \underbrace{\sum_{a_t} \pi_\theta(a_t|s_t)}_{=\,1} = 0
+$$
+
+推导核心：$\sum_a \pi_\theta(a|s) = 1$ 是常数，常数梯度为零。\textbf{减基线不改变梯度期望，但能压方差}；实践中取
+
+$$
+b(s_t) = V^{\pi_\theta}(s_t) = \mathbb{E}\left[G_t \mid s_t\right]
+$$
+
+\subsection*{Step 7 \; 优势函数登场}
+
+定义 $Q$ 与 $V$：
+
+$$
+Q^{\pi}(s,a) = \mathbb{E}\left[G_t \mid s_t = s,\ a_t = a\right],
+\qquad
+V^{\pi}(s) = \mathbb{E}_{a \sim \pi_\theta}\left[Q^{\pi}(s,a)\right]
+$$
+
+优势 $=$ $Q$ 减基线 $V$：
+
+$$
+A^{\pi}(s,a) = Q^{\pi}(s,a) - V^{\pi}(s)
+$$
+
+代入，得到\textbf{策略梯度定理的最终形态}：
+
+$$
+\boxed{\;\nabla_\theta J(\theta) = \mathbb{E}_{(s_t, a_t) \sim \pi_\theta}\left[\nabla_\theta \log \pi_\theta(a_t|s_t)\; A^{\pi}(s_t, a_t)\right]\;}
+$$
+
+实践中 $A$ 换成估计值 $\hat{A}$（M5 的 GAE 就是干这个的），$V$ 由 Critic 网络近似。
+
+\subsection*{全链条小结}
+
+\flow{Step 3 梯度进期望 $\to$ Step 4 环境模型消失 $\to$ Step 5 无关奖励消失 $\to$ Step 6 基线消掉不改变期望 $\to$ 剩下：$\log$ 动作概率 $\times$ 优势。}
+
+\selfcheck{问题：梯度里为何用 $\hat{A}$ 而非原始回报 $R$？\quad 参考答案：$A$ 比 $R$ 多减了基线（状态的平均回报）。不减则``高回报但不比预期好''的动作梯度很大，回报里``状态本身好''的运气成分搅得梯度又大又噪（方差灾难）。减基线在数学上零代价（不改变梯度期望）。}
+
+% ------------------------------------------------------------
+\section{M2：重要性采样与替代目标（详细推导）}
+
+\textbf{锚点}：对应第 3 站的大白话``权重换算''——旧记录凭什么能给新策略用。
+
+\subsection*{Step 0 \; 问题重述（M1 留下的炸弹）}
+
+M1 给出
+
+$$
+\nabla_\theta J(\theta) = \mathbb{E}_{(s,a) \sim \pi_\theta}\left[\nabla_\theta \log \pi_\theta(a|s)\; A^{\pi}(s,a)\right]
+$$
+
+期望底下是 $\pi_\theta$（新策略），但样本只能从 $\pi_{\theta_{\mathrm{old}}}$ 采。任务：\textbf{用旧分布的样本，算新分布的期望}。
+
+\subsection*{Step 1 \; 重要性采样恒等式（三步，无跳步）}
+
+对任意分布 $p$、$q$ 与函数 $f$：
+
+$$
+\mathbb{E}_{x \sim p}[f(x)] = \int p(x)\, f(x)\, dx = \int q(x)\,\frac{p(x)}{q(x)}\, f(x)\, dx = \mathbb{E}_{x \sim q}\left[\frac{p(x)}{q(x)}\, f(x)\right]
+$$
+
+三步分别是：期望的定义；同乘同除 $q(x)$；期望的定义。
+
+唯一条件——\textbf{支撑覆盖}：$q$ 取得到的地方必须覆盖 $p$ 有质量的地方。若某处 $\pi_{\theta_{\mathrm{old}}}(a|s) = 0$ 而 $\pi_\theta(a|s) > 0$，比值没有定义（无穷大）。
+
+\plain{旧习惯从来没这么做过的场合，旧记录里一条样本都没有，权重无从算起。}
+
+\subsection*{Step 2 \; 直接套用到整条轨迹：方差灾难}
+
+对轨迹分布做完整 IS，由 M1 Step 4（环境项 $P$ 与初始分布 $\rho_0$ 不含 $\theta$，全部约掉）：
+
+$$
+\frac{p_\theta(\tau)}{p_{\theta_{\mathrm{old}}}(\tau)} = \prod_{t} \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\mathrm{old}}}(a_t|s_t)} = \prod_t r_t(\theta)
+$$
+
+问题：这是 $T$ 个比值的\textbf{乘积}。每个比值在 $1$ 附近波动，$T$ 个相乘后要么指数趋 $0$、要么指数爆炸。虽然该估计在期望意义下无偏，但轨迹权重的差异可能极大，有限样本的经验均值容易被少数轨迹主导，因此实际中通常不采用这种形式。
+
+\subsection*{Step 3 \; PPO 的实际做法：只修正``动作''一层，冻结``状态''一层}
+
+放弃轨迹级精确修正，改为：
+
+\begin{itemize}[nosep]
+  \item 状态访问分布：冻结在旧策略 $\rho_{\theta_{\mathrm{old}}}(s)$（\textbf{近似}）；
+  \item 给定状态下的动作分布：做 IS 修正（比值 $r_t$）。
+\end{itemize}
+
+$$
+\boxed{\;L^{S}(\theta) = \mathbb{E}_{s \sim \rho_{\theta_{\mathrm{old}}}}\;\mathbb{E}_{a \sim \pi_{\theta_{\mathrm{old}}}}\left[\frac{\pi_\theta(a|s)}{\pi_{\theta_{\mathrm{old}}}(a|s)}\; \hat{A}(s,a)\right]\;}
+$$
+
+逐项对号：期望底下 $\pi_{\theta_{\mathrm{old}}}$ ——数据是旧策略采的，炸弹拆除；$r_t(\theta) = \dfrac{\pi_\theta(a|s)}{\pi_{\theta_{\mathrm{old}}}(a|s)}$ ——那笔权重；$\hat{A}(s,a)$ ——M1 的优势（视为常数、对 $\theta$ 不求导——``打分与调参分离''），站 5 分账的结果从这进来。
+
+凭什么敢冻结状态分布？$\theta$ 在 $\theta_{\mathrm{old}}$ 附近时 $\rho_\theta \approx \rho_{\theta_{\mathrm{old}}}$，误差是高阶小量（M3 的 Kakade--Langford 下界将把这个``敢''变成定理）。
+
+\subsection*{Step 4 \; ``替代''名正言顺：锚点处梯度重合}
+
+先证引理（复用 M1 Step 2 对数求导）：
+
+$$
+\nabla_\theta r_t(\theta) = \nabla_\theta \frac{\pi_\theta}{\pi_{\theta_{\mathrm{old}}}} = \frac{\nabla_\theta \pi_\theta}{\pi_{\theta_{\mathrm{old}}}} = \underbrace{\frac{\pi_\theta}{\pi_{\theta_{\mathrm{old}}}}}_{r_t(\theta)}\cdot \underbrace{\frac{\nabla_\theta \pi_\theta}{\pi_\theta}}_{\nabla_\theta \log \pi_\theta} = r_t(\theta)\,\nabla_\theta \log \pi_\theta(a_t|s_t)
+$$
+
+代入求梯度并在锚点取值：
+
+$$
+\nabla_\theta L^{S}(\theta)\Big|_{\theta_{\mathrm{old}}} = \mathbb{E}\left[\nabla_\theta r_t(\theta)\, \hat{A}\right]\Big|_{\theta_{\mathrm{old}}} = \mathbb{E}\left[r_t\,\nabla_\theta \log \pi_\theta\, \hat{A}\right]\Big|_{\theta_{\mathrm{old}}} = \mathbb{E}\left[\nabla_\theta \log \pi_{\theta_{\mathrm{old}}}\, \hat{A}\right] = \nabla_\theta J(\theta_{\mathrm{old}})
+$$
+
+第二行用引理；第三行用锚点处 $r_t = 1$；末式即 M1 的策略梯度。
+
+因此，在 $\theta=\theta_{\mathrm{old}}$ 处，$L^{S}$ 与 $J$ 的函数值和梯度一致。$L^{S}$ 可作为该点附近的局部近似；在更新初期，$\theta$ 尚未远离旧策略时，其梯度方向仍与真实目标一致。
+
+\subsection*{Step 5 \; 远离锚点后的误差来源}
+
+三个数学原因，层层递进：
+
+\begin{enumerate}[nosep]
+  \item \textbf{状态分布是冻结的近似}：$\theta$ 走远后 $\rho_\theta$ 与 $\rho_{\theta_{\mathrm{old}}}$ 明显不同，$L^{S}$ 仍按旧场景打分——评价对象错了（Step 3 的近似失效）；
+  \item \textbf{有限样本方差爆炸}：IS 的无偏性是对``无穷多样本''说的。$N$ 条样本混入 $r = 20$ 的极端项，经验均值 $\approx \frac{1}{N}\big(20\,\hat{A}_1 + \sum_{i \ge 2}\hat{A}_i\big)$，一条样本话语权是典型样本的 $20$ 倍——第一遍那笔 $0.4/0.02$ 的账正是此机制的数值演示；
+  \item \textbf{优势 $\hat{A}$ 过期}：$\hat{A} \approx A^{\pi_{\theta_{\mathrm{old}}}}$，是旧策略下的``比预期好多少''；$\theta$ 走远后 $A^{\pi_\theta}$ 早已不同——拿着旧功劳簿指挥新习惯。
+\end{enumerate}
+
+\pin{$L^{S}$ 只在锚点附近具有一阶可靠性。随着 $\theta$ 远离旧策略，状态分布近似、有限样本估计和优势估计的误差都会增大，因此还需要限制更新幅度。}
+
+\subsection*{全链条小结}
+
+\flow{IS 恒等式 $\to$ 轨迹级乘积方差爆炸 $\to$ 降级为动作级修正 $+$ 状态冻结 $\to$ 锚点处梯度重合（一阶忠实）$\to$ 远离锚点三重失真。}
+
+\selfcheck{问题：``抄写 N 遍''时，第 1 遍和第 10 遍谁更危险？为什么？\quad 参考答案：第 10 遍更危险。多轮 minibatch 更新使 $\theta$ 持续漂移，离 $\theta_{\mathrm{old}}$ 越远，状态分布失真、极端权重、$\hat{A}$ 过期三者一起放大；第 1 遍时 $r \approx 1$ 且梯度与真目标重合，最安全。}
+
+\textbf{通往 M3}：$L^S$ 的有效范围需要定量描述，Step 3 的状态分布近似也需要误差界。M3 将用性能下界处理这两个问题。
+
+% ------------------------------------------------------------
+\section{M3：TRPO 的信任域约束与性能下界}
+
+\textbf{锚点}：对应第 2 站（改太猛会崩）与第 4 站的前奏（信任域）。
+
+本节将``限制更新幅度''写成可分析的数学形式，并说明 TRPO 与 PPO 的关系。
+
+\subsection*{Step 0 \; 从 M2 的缺口出发}
+
+M2 的 Step 5 指出 $L^{S}$ 只在锚点附近一阶正确。M3 回答两个量化问题：（i）``多近才算近''能否给出定量界？（ii）能否把``不许跑太远''写成可优化的形式？
+
+\subsection*{Step 1 \; 性能差异恒等式：新习惯比旧习惯好多少}
+
+记 $\eta(\pi) = \mathbb{E}_{s_0 \sim \rho_0}\left[V^{\pi}(s_0)\right]$ 为期望折扣回报，$\rho_\pi(s) = \sum_{t=0}^{\infty}\gamma^t P(s_t = s \mid \pi)$ 为折扣状态访问分布。对任意两个策略 $\pi, \tilde\pi$：
+
+$$
+\eta(\tilde\pi) - \eta(\pi) = \sum_{s}\rho_{\tilde\pi}(s)\sum_{a}\tilde\pi(a|s)\, A^{\pi}(s,a)
+$$
+
+\plain{新习惯比旧习惯涨的总分 $=$ 每个场景里``新动作比旧习惯好多少''的加权总和。类比：改了门店话术，业绩涨的 $50$ 万 $=$ 每个客户场景里新话术多赚的钱 $\times$ 这些场景出现的次数，全部加起来。}
+
+\textbf{推导（望远镜 telescope）}：先把优势展开
+
+$$
+A^{\pi}(s,a) = \mathbb{E}_{s' \sim P}\left[r(s,a) + \gamma V^{\pi}(s')\right] - V^{\pi}(s)
+$$
+
+两边按 $\sum_s \rho_{\tilde\pi}(s)\sum_a \tilde\pi(a|s)$ 加权求和：
+
+$$
+\sum_{s}\rho_{\tilde\pi}(s)\sum_a \tilde\pi(a|s) A^\pi
+= \underbrace{\sum_{t\ge0}\gamma^t \mathbb{E}[r_t]}_{\eta(\tilde\pi)}
++ \underbrace{\sum_{t\ge0}\gamma^{t+1}\mathbb{E}[V^\pi(s_{t+1})]}_{\sum_{t\ge1}\gamma^t\mathbb{E}[V^\pi(s_t)]}
+- \sum_{t\ge0}\gamma^{t}\mathbb{E}[V^{\pi}(s_t)]
+$$
+
+后两项相消，只剩 $-\mathbb{E}[V^\pi(s_0)] = -\eta(\pi)$，即得恒等式。
+
+\plain{就像爬楼梯：$5$ 楼比 $2$ 楼高多少 $=$ $(5-4)+(4-3)+(3-2)$，中间层全部抵消，只剩首尾。推导里``价值差''一层层展开，中间项望远镜式相消，剩下``总分差 $=$ 每步优势之和''。}
+
+\subsection*{Step 2 \; 卡点：新习惯还没跑，路线图是空的}
+
+$\rho_{\tilde\pi}$ 是新策略走出来的状态分布——\textbf{数据里没有}。新策略刚写出来还没跑，手里只有旧策略的路线记录 $\rho_\pi$。
+
+\plain{类比：老板改完话术想预估业绩，最准的是看新话术时代每个场景来了多少客户——但新话术明天才上线，今天的客户记录全是老话术的。这也解释了 M2 Step 3 为何只能沿用旧策略的状态分布。}
+
+\subsection*{Step 3 \; Kakade--Langford：用旧路线记账，交一笔``分歧税''}
+
+定义替代目标（局部近似）
+
+$$
+L_\pi(\tilde\pi) = \eta(\pi) + \sum_s \rho_\pi(s)\sum_a \tilde\pi(a|s)\, A^\pi(s,a)
+$$
+
+\textbf{定理（Kakade \& Langford 2002；TRPO 论文 Theorem 1 的表述）}：设 $\epsilon = \max_{s,a}\left|A^{\pi}(s,a)\right|$，$C = \dfrac{4\epsilon\gamma}{(1-\gamma)^2}$，则
+
+$$
+\eta(\tilde\pi) \;\ge\; L_\pi(\tilde\pi) - C\, D_{\mathrm{KL}}^{\max}(\pi, \tilde\pi),
+\qquad
+D_{\mathrm{KL}}^{\max}(\pi,\tilde\pi) = \max_s D_{\mathrm{KL}}\big(\pi(\cdot|s)\,\|\,\tilde\pi(\cdot|s)\big)
+$$
+
+\plain{读法：\textbf{真实涨分 $\ge$ 旧账本估出来的涨分 $-$ 分歧税}。$L_\pi(\tilde\pi)$ 是用旧路线记账的预估涨分（$=$ M2 的 $L^{S}$ 加一个常数）；$D_{\mathrm{KL}}$ 是新旧两套习惯的分歧度；$C$ 是税率，含 $(1-\gamma)^2$——时间越长，单步误差沿 $\gamma^t$ 滚得越大。类比：拿老客户反馈预估新话术业绩，误差被``新旧话术差多远''封顶。话术几乎没变 $\to$ 预估很准；面目全非 $\to$ 预估与现实差十万八千里。}
+
+距离越小，下界越紧；只要 KL 够小，抬升下界就一定抬升真性能。
+
+\pin{该不等式给出了信任域的依据：若更新后的下界不低于原策略性能，真实性能也不会下降。KL 散度越小，下界越紧，因此更新应限制在较小范围内。}
+
+\subsection*{Step 4 \; 从下界到可解的优化问题}
+
+最大化下界（对 $\tilde\pi$ 而言 $\eta(\pi)$ 是常数）$\Longrightarrow$
+
+$$
+\max_{\theta}\; \mathbb{E}_{s\sim\rho_{\theta_{\mathrm{old}}},\,a\sim\pi_{\theta_{\mathrm{old}}}}\left[r_t(\theta)\, \hat{A}(s,a)\right]
+\quad \text{s.t.}\quad \bar{D}_{\mathrm{KL}}(\pi_{\theta_{\mathrm{old}}}\,\|\,\pi_\theta) \le \delta
+$$
+
+\plain{人话：\textbf{在``跟旧习惯的分歧不许超过 $\delta$''的前提下，尽量往好调}。$\delta$ 是分歧限速器——信任域的半径。}
+
+注意括号里的目标正是 M2 的 $L^{S}(\theta)$（差一个与 $\theta$ 无关的常数 $\eta(\pi_{\theta_{\mathrm{old}}})$）——\textbf{M2 与 M3 在此合流}：M2 的替代目标就是 M3 下界的第一项。
+
+两处工程近似：（i）$\max_s$ 的 KL 换成状态平均 $\bar{D}_{\mathrm{KL}}$（可用样本估计）；（ii）$C$ 中的 $\epsilon$ 未知，于是不显式写惩罚系数，而把 KL 直接写成硬约束——``限速''以约束形式出现。
+
+\subsection*{Step 5 \; 为什么难解：约束是二阶的}
+
+在 $\theta = \theta_{\mathrm{old}}$ 处把 KL 二阶展开：
+
+$$
+\bar{D}_{\mathrm{KL}}(\pi_{\theta_{\mathrm{old}}}\|\pi_\theta) \approx \tfrac{1}{2}(\theta - \theta_{\mathrm{old}})^{\top} F\,(\theta - \theta_{\mathrm{old}}),
+\qquad
+F = \mathbb{E}\left[\nabla_\theta \log \pi_\theta\, \nabla_\theta \log \pi_\theta^{\top}\right]
+$$
+
+$F$ 是 Fisher 信息矩阵。于是 TRPO 每步要解``线性目标 $+$ 二次约束''：算 $F^{-1}g$（共轭梯度近似），再线搜索验证约束——二阶计算、慢、与 Adam / 小 minibatch / 异步并行不兼容。
+
+\plain{KL 约束在参数局部近似为二次约束，不能直接套用普通的无约束梯度更新。TRPO 需要用二阶近似和线搜索同时处理目标与约束，实现和调参成本较高。}
+
+\subsection*{Step 6 \; 一阶化的两条路（M4 预告）}
+
+\begin{enumerate}[nosep]
+  \item \textbf{惩罚式}（PPO-Penalty）：把分歧税直接罚进目标，$\max_\theta\; L^{S}(\theta) - \beta\, \bar{D}_{\mathrm{KL}}$，税额 $\beta$ 自适应调节；
+  \item \textbf{裁剪式}（PPO-Clip）：不显式算 KL，直接在权重 $r_t$ 上掐头去尾，用最土的一阶手段实现``不许跑太远''——M4 的主题，也是 PPO 默认形态。
+\end{enumerate}
+
+\subsection*{M3 小结}
+
+\pin{新旧成绩差 $=$ 新习惯在新场景里的优势总和；新场景没法算，就用旧场景记账，代价是交一笔``分歧税''（KL）；将分歧限制在较小范围内，可以提高这种近似的可靠性。TRPO 采用显式约束，PPO 则主要采用裁剪。}
+
+\selfcheck{问题 1：Kakade--Langford 下界里的常数 $C=\dfrac{4\epsilon\gamma}{(1-\gamma)^2}$ 为什么带 $(1-\gamma)^2$？\quad 参考答案：KL 只约束\textbf{单步}策略差异，误差沿时间累积并按 $\gamma^t$ 求和（两个几何级数相乘给出 $\frac{1}{(1-\gamma)^2}$ 量级），$\epsilon$ 决定单步误差的量级——$C$ 就是``单步差异 $\times$ 累积放大''的折算系数。}
+
+\selfcheck{问题 2：如果新旧习惯分歧很大（KL 大），不等式还剩多少用处？\quad 参考答案：分歧税把下界砸得很低，不等式几乎不再约束任何东西（下界可能远低于真实性能，``预估涨分''失去参考价值）——这正好反过来说明必须``拴绳子''：只有把 KL 摁小，下界才紧、账本才可信。}
+
+\textbf{通往 M4}：信任域的数学根基立住了，但它的实现（二阶椭圆）太重。M4 回答：能否只用一阶工具，就把``不许跑太远''落实？
+
+% ------------------------------------------------------------
+\section{M4：裁剪目标 $L^{\mathrm{CLIP}}$ 逐项推导}
+
+\textbf{锚点}：对应第 4 站（油门限位器）与 M3 的遗留问题（KL 信任域需二阶计算）。
+
+\subsection*{Step 0 \; 目标：一阶地实现``不许跑太远''}
+
+M3 的信任域要求限制 KL 散度，而 KL 的局部计算涉及二阶 Fisher 信息矩阵，TRPO 的实现成本较高。PPO-Clip 直接用概率比 $r_t(\theta)$ 限制更新幅度：当 $r_t$ 偏离 $1$ 超过 $\epsilon$ 时，截断其继续产生的收益。这样无需显式计算二阶 KL 约束。
+
+\subsection*{Step 1 \; 裁剪目标}
+
+$$
+L^{\mathrm{CLIP}}(\theta) = \hat{\mathbb{E}}_t\left[\min\left(r_t(\theta)\,\hat{A}_t,\ \ \mathrm{clip}\big(r_t(\theta),\, 1-\epsilon,\, 1+\epsilon\big)\,\hat{A}_t\right)\right]
+$$
+
+两个候选，$\min$ 取较小者：未裁剪项 $r\hat{A}$ 是诚实的替代目标（M2 的 $L^{S}$）；裁剪项把 $r$ 摁进 $[1-\epsilon,\,1+\epsilon]$ 后再乘 $\hat{A}$。
+
+\subsection*{Step 2 \; 核心：四种情况逐项拆}
+
+\textbf{（一）$\hat{A} > 0$（好动作，希望 $r$ 变大）}
+
+\begin{itemize}[nosep]
+  \item $r$ 在区间内：$\min$ 选 $r\hat{A}$，梯度正常流动（正常改进）；
+  \item $r > 1+\epsilon$：$\mathrm{clip}(r) = 1+\epsilon < r$，裁剪项 $=(1+\epsilon)\hat{A} < r\hat{A}$，$\min$ 选裁剪项——常数，梯度为零（\textbf{好处封顶}）；
+  \item $r < 1-\epsilon$：裁剪项 $> r\hat{A}$，$\min$ 选 $r\hat{A}$（正常改进）。
+\end{itemize}
+
+\textbf{（二）$\hat{A} < 0$（坏动作，希望 $r$ 变小）}
+
+\begin{itemize}[nosep]
+  \item $r$ 在区间内：正常；
+  \item $r > 1+\epsilon$（坏动作反而更常发生）：$r\hat{A} < (1+\epsilon)\hat{A}$，$\min$ 选 $r\hat{A}$——梯度照常，继续把 $r$ 往下压（\textbf{坏处照收}）；
+  \item $r < 1-\epsilon$（坏动作已压得很低）：$(1-\epsilon)\hat{A} < r\hat{A}$，$\min$ 选裁剪项——常数，梯度归零（防止过度纠正）。
+\end{itemize}
+
+\begin{center}
+\small
+\rowcolors{2}{lightgray}{white}
+\begin{tabular}{l|l|l}
+\toprule
+ & $r > 1+\epsilon$ & $r < 1-\epsilon$\\
+\midrule
+$\hat{A} > 0$（好处）& 封顶，梯度归零 & 正常，继续抬\\
+$\hat{A} < 0$（坏处）& 照收，继续压 & 封顶，防过度纠正\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\plain{往``好''方向走，走到边界就``到顶了，不许贪''；往``坏''方向走永不停手——坏动作概率变高，永远有压力压回去。``两头都别贪''的精确含义：\textbf{贪的是好处，不是坏处}。}
+
+\subsection*{Step 3 \; 为什么用 $\min$：悲观原则}
+
+只写 $\mathrm{clip}(r)\hat{A}$（不加 $\min$）有致命漏洞：$\hat{A}<0$、$r>1+\epsilon$ 时，裁剪项 $=(1+\epsilon)\hat{A}$ 比真实 $r\hat{A}$ \textbf{高}，目标值虚高且梯度归零——\textbf{坏动作泛滥，压力却松手了}（选裁剪项该项为常数，对 $r$ 没有下压的梯度；松手的结果是坏动作维持高位甚至被其他更新顶得更高）。
+
+$\min$ 的本质是悲观原则：两个候选永远信较低者，于是
+
+$$
+L^{\mathrm{CLIP}} \le L^{S} \quad \text{恒成立}
+$$
+
+优化 $L^{\mathrm{CLIP}}$ 就是优化替代目标的一个\textbf{下界}——宁可少赚，不能高估。这与 M3 的下界思想一致：TRPO 通过二阶 KL 约束限制更新，PPO 则通过一阶的悲观目标限制更新。
+
+\subsection*{Step 4 \; clip 与 KL 的换算：一阶工具干二阶的活}
+
+$D_{\mathrm{KL}}(\pi_{\mathrm{old}}\|\pi_\theta) = \mathbb{E}_{\mathrm{old}}[-\log r]$，且 $\mathbb{E}_{\mathrm{old}}[r] = 1$。对 $f(r) = -\log r$ 在 $r=1$ 处泰勒展开（$f(1)=0$，$f'(1)=-1$，$f''(1)=1$）：
+
+$$
+D_{\mathrm{KL}} = \mathbb{E}\left[-(r-1) + \tfrac{1}{2}(r-1)^2 + \cdots\right] = \tfrac{1}{2}\,\mathbb{E}\left[(r-1)^2\right] + \cdots
+$$
+
+第一项期望为零（$\mathbb{E}[r]=1$），故 KL 的二阶近似为 $\frac{1}{2}\mathbb{E}[(r-1)^2]$。因此，将 $|r-1|$ 限制在 $\epsilon$ 内，对应把局部 KL 散度控制在约 $\epsilon^2/2$ 的量级，为用一阶裁剪近似信任域约束提供了直观解释。
+
+\pin{$L^{\mathrm{CLIP}}$ 同时裁剪概率比并取两项中的较小值：优势为正时限制继续增大的收益，优势为负且概率比过大时仍保留下压梯度。它用一阶计算近似实现信任域限制。}
+
+\selfcheck{问题：$\hat{A}<0$、$r>1+\epsilon$ 时，$\min$ 为何必须选未裁剪的 $r\hat{A}$？\quad 参考答案：该处 $r\hat{A} < (1+\epsilon)\hat{A}$，$\min$ 选 $r\hat{A}$ 才有梯度继续把 $r$ 往下压；若选裁剪项（常数），梯度为零、压力松手，泛滥的坏动作无人纠正。``坏处照收''正是悲观原则 $L^{\mathrm{CLIP}}\le L^{S}$ 的要求。}
+
+\textbf{通往 M5}：M4 的 $\hat{A}$ 从哪来？第一遍只知道 GAE 是个``滑杆''，现在给它一个能写进代码的递推式。
+
+% ------------------------------------------------------------
+\section{M5：GAE 递推式推导}
+
+\textbf{锚点}：对应第 5 站深挖（分账问题、``看一步 vs 看到底''、$\lambda$ 滑杆）。
+
+\subsection*{Step 0 \; 问题重述：给每个动作打分}
+
+要调的是每个瞬间的动作，收到的却是整场奖励。Critic 给每个状态一个``预感''$V(s)$。打分目标：每个动作一个数 $\hat{A}$——正 $=$ 比预期好，负 $=$ 比预期差。难点在``看多远''：只看下一步，稳但短视；看到底，远视但全是噪声。GAE 对不同步数的优势估计进行加权，以在偏差和方差之间折中。
+
+\subsection*{Step 1 \; 零件一：TD 误差——``临场惊喜''}
+
+$$
+\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)
+$$
+
+\plain{做完这个动作、局势更新后，``现实 $+$ 新预感''比``旧预感''高了多少。这正是 M1 优势函数的单样本版：$A^\pi(s,a) = \mathbb{E}[r + \gamma V(s')] - V(s)$，把期望换成一次采样就是 $\delta_t$。它也是``看一步''的完整打分：$\lambda = 0 \Rightarrow \hat{A}_t = \delta_t$。}
+
+\subsection*{Step 2 \; 零件二：多步回报——``秋后算总账''}
+
+$$
+G_t^{(n)} = r_t + \gamma r_{t+1} + \cdots + \gamma^{n-1} r_{t+n-1} + \gamma^{n} V(s_{t+n})
+$$
+
+对应优势 $\hat{A}^{(n)}_t = G_t^{(n)} - V(s_t)$。两个端点：$n=1$ 即 $\delta_t$（纯一步）；$n\to\infty$ 即 $G_t - V(s_t)$（纯看到底）。每多往前看一步，多看一格真相，也多背一格噪声。
+
+\textbf{关键恒等式（望远镜相消，M3 同款）}：
+
+$$
+\hat{A}^{(n)}_t = G_t^{(n)} - V(s_t) = \sum_{l=0}^{n-1} \gamma^{l}\, \delta_{t+l}
+$$
+
+\plain{$n$ 步总账 $=$ $n$ 个临场惊喜的折扣总和；中间的 $V$ 全部相消，只剩首尾。证明：把 $\delta$ 定义代入、望项对齐。}
+
+\subsection*{Step 3 \; GAE：所有``看多远''的平均，$\lambda$ 调权重}
+
+$$
+\hat{A}^{\mathrm{GAE}}_t = (1-\lambda)\sum_{n=1}^{\infty} \lambda^{n-1}\, \hat{A}^{(n)}_t
+$$
+
+代入恒等式、交换求和顺序（对 $n$ 求和给出几何级数，约掉 $(1-\lambda)$）：
+
+$$
+\boxed{\;\hat{A}^{\mathrm{GAE}}_t = \sum_{l=0}^{\infty} (\gamma\lambda)^{l}\, \delta_{t+l}\;}
+$$
+
+端点验证：$\lambda = 0$ 只有 $l=0$ 项存活（纯一步）；$\lambda = 1$ 退化为 $\sum_l \gamma^l \delta_{t+l} = G_t - V(s_t)$（纯看到底）。
+
+\subsection*{Step 4 \; $\gamma\lambda$：双重衰减，各管一件事}
+
+$$
+(\gamma\lambda)^{l} = \underbrace{\gamma^l}_{\text{远的奖励不值钱}} \times \underbrace{\lambda^l}_{\text{远的信息不可靠}}
+$$
+
+$\gamma$：奖励的时间折扣；$\lambda$：\textbf{方差阀门}——越远的 $\delta$ 噪声越大、可信度越低，按 $\lambda^l$ 压权。
+
+\plain{类比：学期成绩评定。$\delta$ 是每次单元测验的超常/失常发挥（即时、可靠）；$G - V$ 是期末排名进步（总账，但受考题运气影响大）；GAE 是加权学期成绩——近期测验权重高，远期大考按 $\lambda$ 打折。$\lambda=0$ 只看最近一次测验，$\lambda=1$ 只看期末排名。}
+
+\subsection*{Step 5 \; 递推实现：从结局倒着走}
+
+$$
+\boxed{\;\hat{A}_t = \delta_t + \gamma\lambda\, \hat{A}_{t+1}\;}
+$$
+
+\plain{每个动作的成绩 $=$ 自己的临场惊喜 $+$ 后续动作成绩的打折版。从轨迹末端（$\hat{A}_T = \delta_T$）倒推回起点，$(\gamma\lambda)^l$ 的权重自动展开，无需存储级数。}
+
+\selfcheck{题目（$\gamma=1,\ \lambda=0.5$）：$\delta_t = +1,\ \delta_{t+1} = -2,\ \delta_{t+2} = +4$，之后全 $0$。求 $\hat{A}^{\mathrm{GAE}}_t$。\quad 参考答案：倒推 $\hat{A}_{t+2} = 4$，$\hat{A}_{t+1} = -2 + 0.5\times 4 = 0$，$\hat{A}_t = 1 + 0.5\times 0 = \mathbf{1}$；级数验证 $1 - 1 + 1 = 1$。彩蛋：$t+2$ 的 $+4$ 经折扣正好抵消 $t+1$ 的 $-2$，远期大事件全被 $\lambda$ 压权滤掉——``方差阀门''的数值演示。若 $\lambda = 0$（纯一步），$t$ 时刻只得 $+1$，$t+2$ 的大惊喜完全看不见，这就是短视的代价。}
+
+\textbf{通往 M6}：前述模块分别给出了策略目标、数据复用方法、更新约束和优势估计，下面将它们组合为完整的训练目标与流程。
+
+% ------------------------------------------------------------
+\section{M6：完整损失函数与训练流程}
+
+\textbf{锚点}：对应第 5 站（训练循环）与第 6 站（实践）。本节组合前述各个目标，给出完整训练流程。
+
+\subsection*{Step 1 \; 主菜：策略损失}
+
+$$
+L^{\mathrm{CLIP}}(\theta) = \hat{\mathbb{E}}_t\left[\min\left(r_t(\theta)\hat{A}_t,\ \mathrm{clip}(r_t,1-\epsilon,1+\epsilon)\hat{A}_t\right)\right]
+$$
+
+Actor 的功课（M4 推完）。最大化它；放进总损失时带负号（框架习惯最小化）。
+
+\subsection*{Step 2 \; 配菜一：价值损失——``预感也要对账''}
+
+$$
+L^{V}(\phi) = \hat{\mathbb{E}}_t\left[\left(V_\phi(s_t) - G_t\right)^2\right]
+$$
+
+\plain{Critic 的预感 $V(s)$ 是打分机器（$\delta_t$、GAE 全用它），它自己也是网络、也会猜错。每场结束结算：猜高/猜低都是误差。预感越准，``临场惊喜''$\delta_t$ 越可信，打分体系的地基越稳。}
+
+\subsection*{Step 3 \; 配菜二：熵奖励——``防摆烂专项资金''}
+
+$$
+H(\pi) = -\sum_a \pi(a|s)\log\pi(a|s)
+$$
+
+\begin{itemize}[nosep]
+  \item 分布均匀：$H$ 最大（最随机，乐于探索）；
+  \item 全押一个动作：$H = 0$（最死板，摆烂）。
+\end{itemize}
+
+总损失中加 $-c_2\,H(\pi_\theta)$（最小化框架下等价于\textbf{奖励}熵）。
+
+\plain{训练基金里专门划出的``探索经费''——只要还愿意尝试不同动作就给补贴；一旦摆烂（熵归零）补贴归零，主菜梯度拉着它走向单一动作，但只要还没摆烂，补贴持续兜底。}
+
+\subsection*{Step 4 \; 总损失：整桌菜}
+
+$$
+L^{\mathrm{total}}(\theta, \phi) = \underbrace{-\,L^{\mathrm{CLIP}}(\theta)}_{\text{Actor 主菜}} + \underbrace{c_1\, L^{V}(\phi)}_{\text{Critic 对账}} - \underbrace{c_2\, H(\pi_\theta)}_{\text{探索补贴}}
+$$
+
+原论文建议 $c_1 = 0.5$、$c_2 = 0.01$（四足训练常调小 $c_2$ 并随训练衰减——先探索后收敛）。
+
+\subsection*{Step 5 \; 训练流程：口诀逐行版}
+
+第一遍口诀``跑一圈 $\to$ 打分 $\to$ 抄写 N 遍 $\to$ 换代''的逐行展开：
+
+\begin{enumerate}[nosep]
+  \item \textbf{外层循环}（转到学会为止），每轮：
+  \begin{enumerate}[nosep]
+    \item \textbf{跑}：用 $\pi_{\theta_{\mathrm{old}}}$ 采样 $N$ 步，攒轨迹 $\mathcal{D}_k$；
+    \item \textbf{打分}：算 $\delta_t$，从后往前递推得 $\hat{A}^{\mathrm{GAE}}_t$（M5）；
+    \item \textbf{换代锚定}：$\theta_{\mathrm{old}} \leftarrow \theta$——之后所有学习以它为基准；
+    \item \textbf{抄写 $N$ 遍}：$M$ 轮 epoch，每轮打乱 $\mathcal{D}_k$ 切 minibatch，对每个 minibatch 梯度下降 $L^{\mathrm{total}}$（三道菜共用一个梯度）。
+  \end{enumerate}
+\end{enumerate}
+
+唯一新增的正式细节：$\theta_{\mathrm{old}} \leftarrow \theta$ 这行——锚点每圈重新钉一次，下一圈数据按新策略采（``换代''）。
+
+\subsection*{Step 6 \; 超参数手册}
+
+\begin{center}
+\small
+\rowcolors{2}{lightgray}{white}
+\begin{tabular}{l|l|l|l}
+\toprule
+旋钮 & 典型值 & 管什么 & 拧错后果\\
+\midrule
+裁剪 $\epsilon$ & $0.1\sim0.2$ & 油门限位器松紧 & 大 $\to$ 易崩；小 $\to$ 学不动\\
+GAE $\lambda$ & $0.9\sim0.95$ & 看得远 vs 算得稳 & 小 $\to$ 短视；大 $\to$ 噪声\\
+折扣 $\gamma$ & $0.99\sim0.999$ & 远期奖励的身价 & 小 $\to$ 鼠目寸光\\
+学习率 & $\sim 3\times10^{-4}$ & 每步迈多大 & 宁小勿大\\
+抄写遍数 $M$ & $3\sim10$ & 数据复用轮数 & 多 $\to$ 三重失真放大\\
+熵系数 $c_2$ & $0.01$ 起，可衰减 & 探索补贴 & 大 $\to$ 瞎试不收敛；小 $\to$ 摆烂\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+实战信号：\textbf{断崖}（奖励跳水）$\to$ 收紧 $\epsilon$、调小学习率；\textbf{摆烂}（动作熵趋零）$\to$ 先查奖励配比，再提 $c_2$。
+
+\subsection*{Step 7 \; 第二遍全链条}
+
+\flow{M1 调什么 $\to$ M2 旧数据怎么用 $\to$ M3 为什么限步 $\to$ M4 怎么限步 $\to$ M5 每步怎么打分 $\to$ M6 整机怎么跑}
+
+\pin{PPO 每轮先采样，再用 GAE 估计优势，随后基于概率比和裁剪目标进行多轮小批量更新，最后替换旧策略。总损失同时优化策略、价值函数和熵，分别对应策略改进、优势估计所需的价值拟合与探索维持。}
+
+\selfcheck{症状：动作熵趋零、奖励停在平台期。\quad 排查顺序（症状驱动；第 0 步永远是站 6 总纲——查奖励配比）：\textbf{① 熵奖励}——症状直指探索补贴失效（$c_2$ 太小或衰减太快），且主菜梯度单边倒；\textbf{② Actor 主菜}——若熵正常，查 $\epsilon$ 是否太紧、学习率是否太小（学不动）；\textbf{③ Critic 对账}——预感失真的典型症状是曲线抖动而非平滑平台。注：``先拆总损失看三项曲线''是正确操作，拆开后第一个该看到的就是熵项归零。}
+
+% ------------------------------------------------------------
+\section{大白话锚点 $\leftrightarrow$ 公式对照表}
+
+\begin{center}
+\small
+\rowcolors{2}{lightgray}{white}
+\begin{tabular}{p{5.2cm}p{7.2cm}}
+\toprule
+\textbf{大白话锚点} & \textbf{公式落点}\\
+\midrule
+``习惯本身'' & $\pi_\theta(a|s)$、$\nabla_\theta \log \pi_\theta(a|s)$\\
+``比预期好多少'' & $A^{\pi}(s,a) = Q^{\pi}(s,a) - V^{\pi}(s)$\\
+``减掉预感、去运气'' & 基线 $b(s_t) = V^{\pi}(s_t)$（期望严格为零）\\
+``权重换算'' & $r_t(\theta) = \dfrac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\mathrm{old}}}(a_t|s_t)}$\\
+``权重跑飞'' & $r \to 20$、$0.05$ 等极端比值\\
+``裁剪／油门限位器'' & $\min\left(rA,\ \mathrm{clip}(r,1-\epsilon,1+\epsilon)A\right)$\\
+``抄写 N 遍'' & 同一批数据对 $L^{S}$ 做多轮 minibatch 更新\\
+``看到底 vs 看一步'' & $G_t$（reward-to-go）vs 单步 TD 误差\\
+``GAE 滑杆'' & $\hat{A}^{\mathrm{GAE}}_t = \sum_l (\gamma\lambda)^l \delta_{t+l} = \delta_t + \gamma\lambda \hat{A}_{t+1}$\\
+``临场惊喜'' & $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$\\
+``分歧税'' & $C \cdot D_{\mathrm{KL}}^{\max}(\pi, \tilde\pi)$\\
+``止逆阀'' & $\min$ 悲观原则：$L^{\mathrm{CLIP}} \le L^{S}$\\
+``探索补贴'' & $-c_2\, H(\pi_\theta)$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ============================================================
+\chapter*{结语}
+\addcontentsline{toc}{chapter}{结语}
+% ============================================================
+
+全书内容可以归纳为以下几点：
+
+\pin{PPO 的核心是限制策略更新幅度并复用采样数据：M1 给出策略梯度，M2 用重要性采样构造替代目标，M3 给出信任域下界，M4 用裁剪目标实现近似约束，M5 用 GAE 估计优势，M6 将策略损失、价值损失和熵项组合为可实现的训练流程。}
+
+\textbf{继续深入的方向}（按需自取）：
+
+\begin{itemize}[nosep]
+  \item \textbf{PPO-Penalty}：另一条一阶化路线，自适应调节 KL 税额 $\beta$ 的细节；
+  \item \textbf{实现细节}：Critic 的价值裁剪（value clipping）、优势归一化、学习率退火；
+  \item \textbf{大规模训练}：多进程采样、GPU 向量环境、PPO 的并行变体；
+  \item \textbf{应用侧}：RLHF 中的 PPO（ reward model $+$ KL 惩罚防跑偏）、机器人 sim-to-real 中的域随机化配合；
+  \item \textbf{新变体}：GRPO（去掉 Critic，组内相对比较）等与 PPO 的取舍。
+\end{itemize}
+
+\textbf{引用提醒}：PPO 原始论文是 arXiv 预印本（非同行评审会议发表），引用格式见参考文献第一条。
+
+% ============================================================
+\begin{thebibliography}{9}
+% ============================================================
+
+\bibitem{ppo}
+J.~Schulman, F.~Wolski, P.~Dhariwal, A.~Radford, O.~Klimov.
+\textit{Proximal Policy Optimization Algorithms}.
+arXiv:1707.06347, 2017.（PPO 原始论文，未正式发表于同行评审会议，引用时写 arXiv 预印本）
+
+\bibitem{trpo}
+J.~Schulman, S.~Levine, P.~Abbeel, M.~Jordan, P.~Moritz.
+\textit{Trust Region Policy Optimization}.
+ICML, 2015.（PPO 的前身：信任域思想）
+
+\bibitem{gae}
+J.~Schulman, P.~Moritz, S.~Levine, M.~Jordan, P.~Abbeel.
+\textit{High-Dimensional Continuous Control Using Generalized Advantage Estimation}.
+ICLR, 2016.（GAE：优势估计的 $\lambda$ 滑杆）
+
+\bibitem{cpi}
+S.~Kakade, J.~Langford.
+\textit{Approximately Optimal Approximate Reinforcement Learning}.
+ICML, 2002.（保守策略迭代：Kakade--Langford 性能下界的来源）
+
+\end{thebibliography}
+
+\end{document}

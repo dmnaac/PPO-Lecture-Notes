@@ -1,0 +1,23 @@
+\contentsline {chapter}{前言：如何使用本讲义}{2}{chapter*.2}%
+\contentsline {chapter}{\numberline {第一章\hspace {.3em}}大白话走全程（第一遍）}{3}{chapter.1}%
+\contentsline {section}{\numberline {1.1}引言：贯穿全课的类比与算法地位}{3}{section.1.1}%
+\contentsline {section}{\numberline {1.2}第 1 站：PPO 是干嘛的}{3}{section.1.2}%
+\contentsline {section}{\numberline {1.3}第 2 站：为什么``改太猛''会崩}{4}{section.1.3}%
+\contentsline {section}{\numberline {1.4}第 3 站：拿旧记录评价新策略（权重换算）}{4}{section.1.4}%
+\contentsline {section}{\numberline {1.5}第 4 站：裁剪（Clipping）}{5}{section.1.5}%
+\contentsline {section}{\numberline {1.6}第 5 站：一整圈训练长什么样}{6}{section.1.6}%
+\contentsline {section}{\numberline {1.7}第 6 站：实际跑起来注意啥}{7}{section.1.7}%
+\contentsline {section}{\numberline {1.8}案例串讲：四足机器人平地行走}{7}{section.1.8}%
+\contentsline {section}{\numberline {1.9}第一遍小结：主线与三根顶梁柱}{8}{section.1.9}%
+\contentsline {section}{\numberline {1.10}大白话概念速查表}{9}{section.1.10}%
+\contentsline {chapter}{\numberline {第二章\hspace {.3em}}公式推导（第二遍）}{10}{chapter.2}%
+\contentsline {section}{\numberline {2.1}本章导读：一条问题链}{10}{section.2.1}%
+\contentsline {section}{\numberline {2.2}记号约定（全局）}{11}{section.2.2}%
+\contentsline {section}{\numberline {2.3}M1：策略梯度定理的完整推导}{11}{section.2.3}%
+\contentsline {section}{\numberline {2.4}M2：重要性采样与替代目标（详细推导）}{14}{section.2.4}%
+\contentsline {section}{\numberline {2.5}M3：TRPO 的信任域约束与性能下界}{16}{section.2.5}%
+\contentsline {section}{\numberline {2.6}M4：裁剪目标 $L^{\mathrm {CLIP}}$ 逐项推导}{20}{section.2.6}%
+\contentsline {section}{\numberline {2.7}M5：GAE 递推式推导}{22}{section.2.7}%
+\contentsline {section}{\numberline {2.8}M6：完整损失函数与训练流程}{23}{section.2.8}%
+\contentsline {section}{\numberline {2.9}大白话锚点 $\leftrightarrow $ 公式对照表}{26}{section.2.9}%
+\contentsline {chapter}{结语}{27}{chapter*.3}%
